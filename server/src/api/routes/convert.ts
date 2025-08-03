@@ -58,6 +58,8 @@ router.post('/', async (req: Request, res: Response) => {
     const result = await destinationClass.convert(item);
     res.write(`${JSON.stringify(result)}\n`);
   }
+
+  res.end()
 })
 
 export default router

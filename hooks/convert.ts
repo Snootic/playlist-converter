@@ -72,4 +72,5 @@ export async function* convert(playlistUrl: string, destination?: string) {
       }
     }
   }
+  return
 }
