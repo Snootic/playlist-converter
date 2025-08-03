@@ -84,7 +84,7 @@ export class Auth implements AuthConfig {
     const expiresIn = parseInt(data.expires_in) || 3599;
     const tokenData = {
       ...data,
-      expires_at: Date.now() + (expiresIn * 1000)
+      expires: Date.now() + (expiresIn * 1000)
     }
 
     return tokenData;

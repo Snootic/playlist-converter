@@ -68,10 +68,10 @@ export async function isTokenExpired(platform: string): Promise<boolean> {
     if (!tokenData) return true;
 
     const tokens = JSON.parse(tokenData);
-    if (!tokens.expires_at) return true;
+    if (!tokens.expires) return true;
 
     const bufferTime = 5 * 60 * 1000;
-    return Date.now() >= (tokens.expires_at - bufferTime);
+    return Date.now() >= (tokens.expires - bufferTime);
   } catch {
     return true;
   }
