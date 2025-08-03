@@ -3,6 +3,7 @@ import { parseTitle } from "@/utils/textParser";
 import { AccessToken, SpotifyApi } from "@spotify/web-api-ts-sdk";
 import {
   AuthConfig,
+  ConversionResult,
   CreatePlaylistRequest,
   Playlist,
   SpotifyPlaylist,
@@ -98,19 +99,30 @@ export class SpotifyService {
     return tracks;
   }
 
-  async *convertToSpotify(playlist: Playlist<any>): AsyncGenerator<{ConversionResult: any}>{
-    for (const item of playlist) {
-      const tracks = await this.searchTrack(item.title);
-      const matches = await this.checkMatches(tracks, item);
+  async convertToSpotify(playlistItem: any): ConversionResult<any> {
+    const tracks = await this.searchTrack(playlistItem.title)
+    const matches = await this.checkMatches(tracks, playlistItem)
 
-      if (matches.length > 0) {
-        const bestMatch = matches[0][0];
-
-        yield { ConversionResult: { item, bestMatch, matches } };
-      } else {
-        yield { ConversionResult: { item, bestMatch: null, matches: [] } };
-      }
+    let bestMatch = null;
+    if ( matches.length > 0 ) {
+      bestMatch = matches[0][0]
     }
+
+    return {playlistItem, bestMatch, matches}
+    
+    // for (const item of playlist) {
+      
+    //   const tracks = await this.searchTrack(item.title);
+    //   const matches = await this.checkMatches(tracks, item);
+
+    //   if (matches.length > 0) {
+    //     const bestMatch = matches[0][0];
+
+    //     yield { ConversionResult: { item, bestMatch, matches } };
+    //   } else {
+    //     yield { ConversionResult: { item, bestMatch: null, matches: [] } };
+    //   }
+    // }
   }
 
   async createPlaylist(tracksUriList: string[], createPlaylistRequest: CreatePlaylistRequest): Promise<SpotifyPlaylist> {
