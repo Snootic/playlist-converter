@@ -1,7 +1,7 @@
 import score from '@/utils/score';
-import { parseISO8601Duration } from '@/utils/textParser';
+import { parseISO8601Duration, parseTitle } from '@/utils/textParser';
 import { Track } from '@spotify/web-api-ts-sdk';
-import { TrackMatch, VideoMetadata, YouTubeVideo } from '@types';
+import { ConversionResult, Playlist, TrackMatch, VideoMetadata, YouTubeVideo } from '@types';
 import { google, youtube_v3 } from 'googleapis';
 import yts from 'yt-search';
 
@@ -13,6 +13,8 @@ export class YoutubeService {
     this.youtube = google.youtube("v3");
   }
 
+
+  // will probably never use these use google api functions
   async searchWithGoogleApi(spotifyTrack: Track): Promise<youtube_v3.Schema$SearchResult[]> {
     const response = await this.youtube.search.list({
       part: ["snippet"],
@@ -102,13 +104,13 @@ export class YoutubeService {
     return videoMetadata;
   }
   
-  async checkMatches(track: Track, videos: YouTubeVideo[]): Promise<Array<[VideoMetadata, TrackMatch<VideoMetadata>]>> {
+  async checkMatches(videos: YouTubeVideo[], original: any): Promise<Array<[VideoMetadata, TrackMatch<VideoMetadata>]>> {
     const matches = new Map<VideoMetadata, TrackMatch<VideoMetadata>>();
   
     await Promise.all(videos.map(async (video, index) => {    
       const videoMetadata = await this.getVideoMetadata(video);
   
-      const scoreDetails = score(track, videoMetadata);
+      const scoreDetails = score(original, videoMetadata);
   
       if (scoreDetails === null) {
         return;
@@ -144,21 +146,19 @@ export class YoutubeService {
     return sortedMatches;
   }
   
-  async searchTrackFromSpotify(track: Track): Promise<YouTubeVideo[]> {
-    const query = `${track.name} ${track.artists[0].name}`;
-    console.log(`Searching for ${query}`);
+  async searchTrack(title: string): Promise<YouTubeVideo[]> {
+    const query = parseTitle(title);
+
     let result: any = null;
   
     let attempts = 0;
     let success = false;
     
     while (attempts < 5 && !success) {
-      console.log(`attempt ${attempts} for ${query}`);
       try {
         result = await yts(query);
         success = true;
       } catch (error) {
-        console.log(error);
         attempts++;
         await new Promise(resolve => setTimeout(resolve, 1000 * attempts));      
       }
@@ -173,35 +173,27 @@ export class YoutubeService {
     return videos;
   }
   
-  async *convertFromSpotify(spotifyTracks: Track[]) {
-    for (const track of spotifyTracks) {
-      const videos = await this.searchTrackFromSpotify(track);
-      const matches = await this.checkMatches(track, videos);
-  
-      if (matches.length > 0) {
-        const bestMatch = matches[0][0];
-        console.log(`Match found for ${track.artists[0].name} - ${track.name}: ${bestMatch.title} - ${bestMatch.url} with score ${matches[0][1].totalScore}`);
-        console.log(`Other matches: ${matches.slice(1).map((match) => `${match[0].title} - ${match[0].url} with score ${match[1].totalScore}\n`)}`);
-        yield { track, bestMatch, matches };
-      } else {
-        console.log(`No match found for ${track.artists[0].name} - ${track.name}`);
-        yield { track, bestMatch: null, matches: [] };
-      }
+  async convertToSpotify(playlistItem: any): ConversionResult<any> {
+    const videos = await this.searchTrack(playlistItem.title)
+    const matches = await this.checkMatches(videos, playlistItem)
+
+    let bestMatch = null;
+    if ( matches.length > 0 ) {
+      bestMatch = matches[0][0]
     }
+
+    return {playlistItem, bestMatch, matches}
   }
   
-  playlistIdParser(playlistUrl: string): string {
+  private playlistIdParser(playlistUrl: string): string {
     const playlistId = playlistUrl.split("list=")[1];
     return playlistId;
   }
   
   async getPlaylistTracks(playlistUrl: string): Promise<YouTubeVideo[]> {	
     const playlistId = this.playlistIdParser(playlistUrl);
-    
-    console.log(`Getting Youtube Playlist ${playlistId}`); 
-    
+
     const playlist = await yts({ listId: playlistId });
-    
     const videos: YouTubeVideo[] = [];
   
     console.log(playlist.videos.length);
@@ -209,9 +201,7 @@ export class YoutubeService {
     // the current API Client only supports 100 at a time because of ytInitialData only returning it
     
     playlist.videos.map((video) => videos.push(video));
-  
-    console.log(`Found ${videos.length} for playlist ${playlist.listId}`);
-    
+
     return videos;
   }
   
