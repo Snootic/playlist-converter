@@ -48,7 +48,7 @@ export default function Header() {
             variant="youtube"
             title={'Login'}
             icon={require('@/assets/images/youtube-logo-white.png')}
-            event={() => login('Youtube')}
+            event={() => login('YouTube')}
           />
         )}
       </View>
