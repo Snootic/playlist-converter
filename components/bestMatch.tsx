@@ -1,8 +1,8 @@
-import { ConversionResult, SpotifyTrack, YouTubeVideo } from "@types";
+import { mapSource } from "@/common/detectSource";
 import Button from "@/components/button";
 import { Colors } from "@/constants/Colors";
-import {mapSource} from "@/common/detectSource";
 import { useDynamicFlexContainer } from "@/hooks/Dimensions";
+import { ConversionResult, SpotifyTrack, YouTubeVideo } from "@types";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
@@ -21,9 +21,15 @@ import {
 } from "react-native";
 import OtherMatch from "./otherMatch";
 
-type MatchProps = ConversionResult<SpotifyTrack | YouTubeVideo> & { numColumns?: number, style?: ViewStyle };
+type MatchProps = ConversionResult<SpotifyTrack | YouTubeVideo> & {
+  numColumns?: number,
+  style?: ViewStyle,
+  index?: number,
+  shouldAnimate?: boolean,
+  onAnimationDone?: () => void
+};
 
-export default function BestMatch({ original, bestMatch, matches, numColumns, style }: MatchProps) {
+export default function BestMatch({ original, bestMatch, matches, numColumns, style, index=0, shouldAnimate = true, onAnimationDone }: MatchProps) {
   const colorScheme = useColorScheme()
   const styles = getStyles(colorScheme)
 
@@ -37,19 +43,26 @@ export default function BestMatch({ original, bestMatch, matches, numColumns, st
   const fadeInAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(slideDownAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeInAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [slideDownAnim, fadeInAnim]);
+    if (shouldAnimate) {
+      Animated.parallel([
+        Animated.timing(slideDownAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeInAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        onAnimationDone && onAnimationDone();
+      });
+    } else {
+      slideDownAnim.setValue(0);
+      fadeInAnim.setValue(1);
+    }
+  }, [shouldAnimate]);
 
   return (
     <Animated.View style={[{ width: numColumns === 2 ? '49.5%' : '100%', transform: [{ translateY: slideDownAnim }],opacity: fadeInAnim}, style]}>

@@ -3,10 +3,11 @@ import Button from "@/components/button";
 import Header from "@/components/header";
 import Input from "@/components/input";
 import { Colors } from "@/constants/Colors";
+import { convert } from "@/hooks/convert";
 import { useDynamicFlexContainer } from "@/hooks/Dimensions";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { ConversionResult, SpotifyTrack, YouTubeVideo } from "@types";
 import { useEffect, useRef, useState } from "react";
-import { ConversionResult, SpotifyTrack, YouTubeVideo} from "@types"
 import {
   Animated,
   ColorSchemeName,
@@ -18,7 +19,6 @@ import {
   View,
   useWindowDimensions
 } from "react-native";
-import { convert } from "@/hooks/convert";
 
 export default function Index() {
   const colorScheme = useColorScheme();
@@ -34,6 +34,7 @@ export default function Index() {
 
   let [inputValue, setInputValue] = useState<string>('')
   const [conversionData, setConversionData] = useState<ConversionResult<SpotifyTrack | YouTubeVideo>[] | null>(null);
+  const [animatedRows, setAnimatedRows] = useState<Record<string, boolean>>({});
 
   let result: Response | undefined = undefined;
 
@@ -77,6 +78,10 @@ export default function Index() {
     }
   }, [conversionData, slideUpAnim, fadeInAnim, flatListSlideAnim]);
 
+  const handleAnimationDone = (key: string) => {
+    setAnimatedRows(prev => ({ ...prev, [key]: true }));
+  };
+
   return (
     <SafeAreaView style={styles.page}>
         <Header />
@@ -108,17 +113,20 @@ export default function Index() {
           ]}
         >
           <FlatList
-            key={numColumns}
             data={conversionData}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={({ item, index }) => 
-            <Match
-              original={item.original}
-              bestMatch={item.bestMatch}
-              matches={item.matches ?? []}
-              numColumns={numColumns}
-              style={{zIndex: (-1 - index)}}
-            />}
+            keyExtractor={(item, index) => item.original.url || index.toString()}
+            renderItem={({ item, index }) => (
+              <Match
+                original={item.original}
+                bestMatch={item.bestMatch}
+                matches={item.matches ?? []}
+                numColumns={numColumns}
+                style={{zIndex: (-1 - index)}}
+                index={index}
+                shouldAnimate={!animatedRows[item.original.url || index.toString()]}
+                onAnimationDone={() => handleAnimationDone(item.original.url || index.toString())}
+              />
+            )}
             contentContainerStyle={{ gap: 10, paddingBottom: 50 }}
             numColumns={numColumns}
             columnWrapperStyle={numColumns > 1 ? { justifyContent: 'space-between', rowGap: 10 } : undefined}
