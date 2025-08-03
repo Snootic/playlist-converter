@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import { sources } from "@/hooks/detectSource";
+import { sources } from "@/common/detectSource";
 import {
   ColorSchemeName,
   Image,
