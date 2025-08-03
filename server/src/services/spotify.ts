@@ -99,7 +99,7 @@ export class SpotifyService {
     return tracks;
   }
 
-  async convertToSpotify(playlistItem: any): ConversionResult<any> {
+  async convert(playlistItem: any): ConversionResult<any> {
     const tracks = await this.searchTrack(playlistItem.title)
     const matches = await this.checkMatches(tracks, playlistItem)
 

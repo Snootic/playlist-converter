@@ -173,7 +173,7 @@ export class YoutubeService {
     return videos;
   }
   
-  async convertToSpotify(playlistItem: any): ConversionResult<any> {
+  async convert(playlistItem: any): ConversionResult<any> {
     const videos = await this.searchTrack(playlistItem.title)
     const matches = await this.checkMatches(videos, playlistItem)
 
