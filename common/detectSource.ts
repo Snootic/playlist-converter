@@ -1,4 +1,4 @@
-import { SpotifyTrack, YouTubeVideo } from "@types"
+import { Match, ScoreDetails, SpotifyTrack, YouTubeVideo } from "@types"
 
 export type detectSourceProps = {
   source: SpotifyTrack | YouTubeVideo
@@ -19,7 +19,7 @@ export function detectSource(source: detectSourceProps['source']): string | unde
   return undefined
 }
 
-export default function mapSource(source : detectSourceProps['source']) {
+export function mapSource(source : detectSourceProps['source']) {
   const sourceName = detectSource(source);
 
   if (sourceName === "Spotify") {
@@ -43,3 +43,30 @@ export default function mapSource(source : detectSourceProps['source']) {
   }
   return undefined;
 }
+
+export function mapMatch(match: detectSourceProps['source'], score: ScoreDetails): Match | undefined {
+  const sourceName = detectSource(match);
+
+  let totalScore = Object.values(score).reduce((sum, val) => (sum as number) + (val as number), 0)
+
+  if (sourceName === "Spotify") {
+    const spotifySource = match as SpotifyTrack;
+    return {
+      title: spotifySource.name,
+      url: spotifySource.external_urls.spotify,
+      thumbnailUrl: spotifySource.album.images[1]?.url || spotifySource.album.images[0]?.url || "",
+      scoreDetails: score,
+      totalScore: totalScore
+    };
+  } else if (sourceName === "YouTube") {
+    const youtubeSource = match as YouTubeVideo;
+    return {
+      title: youtubeSource.title,
+      url: youtubeSource.url,
+      thumbnailUrl: youtubeSource.thumbnail,
+      scoreDetails: score,
+      totalScore: totalScore
+    };
+  }
+  return undefined;
+} 

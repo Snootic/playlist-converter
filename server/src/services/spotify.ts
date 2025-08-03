@@ -9,9 +9,10 @@ import {
   SpotifyPlaylist,
   SpotifyPlaylistTrack,
   SpotifyTrack,
-  TrackMatch
+  Match
 } from "@types";
 import { getConfig } from "../utils/detectSource";
+import { mapMatch } from "@common/detectSource";
 
 export class SpotifyService {
   private API: SpotifyApi;
@@ -34,8 +35,8 @@ export class SpotifyService {
     return playlistId;
   }
 
-  private async checkMatches(spotifyTracks: SpotifyTrack[], original: any): Promise<Array<[SpotifyTrack, TrackMatch<SpotifyTrack>]>> {
-    const matches = new Map<SpotifyTrack, TrackMatch<SpotifyTrack>>();
+  private async checkMatches(spotifyTracks: SpotifyTrack[], original: any): Promise<Match[]> {
+    const matches = new Array<Match>();
 
     await Promise.all(spotifyTracks.map(async (track: SpotifyTrack) => {
       const scoreDetails = score(track, original);
@@ -43,15 +44,13 @@ export class SpotifyService {
       if (scoreDetails === null) {
         return;
       }
+      
+      const match = mapMatch(track, scoreDetails)
 
-      const totalScore = Object.values(scoreDetails).reduce((sum, value) => (sum as number) + (value as number), 0);
-
-      matches.set(track, { totalScore, scoreDetails });
+      matches.push(match);
     }));
 
-    const sortedMatches = [...matches.entries()].sort((a, b) => {
-      return b[1].totalScore - a[1].totalScore;
-    });
+    const sortedMatches = matches.sort((a, b) => b.totalScore - a.totalScore);
 
     return sortedMatches;
   }
@@ -105,7 +104,7 @@ export class SpotifyService {
 
     let bestMatch = null;
     if ( matches.length > 0 ) {
-      bestMatch = matches[0][0]
+      bestMatch = matches[0]
     }
 
     return {playlistItem, bestMatch, matches}
