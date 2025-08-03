@@ -18,6 +18,7 @@ import {
   View,
   useWindowDimensions
 } from "react-native";
+import { convert } from "@/hooks/convert";
 
 export default function Index() {
   const colorScheme = useColorScheme();
@@ -32,7 +33,9 @@ export default function Index() {
   const numColumns = width > 600 ? 2 : 1;
 
   let [inputValue, setInputValue] = useState<string>('')
-  const [conversionData, setConversionData] = useState<ConversionResult<SpotifyTrack | YouTubeVideo> | null>(null);
+  const [conversionData, setConversionData] = useState<ConversionResult<SpotifyTrack | YouTubeVideo>[] | null>(null);
+
+  let result: Response | undefined = undefined;
 
   useEffect(() => {
     if (conversionData) {
@@ -81,11 +84,14 @@ export default function Index() {
             <View style={[styles.inputContainer]}>
               <Input placeholder="Paste the playlist link here" value={inputValue} onChangeText={(text) => setInputValue(text)}/>
               <Button
-                variant="primary"
-                title="Convert Playlist"
-                height={47}
-                event={() => null} 
-                callback={() => console.log(conversionData)}
+              variant="primary"
+              title="Convert Playlist"
+              height={47}
+              event={async () => {
+                for await (const item of convert(inputValue)) {
+                  setConversionData(prev => prev ? [...prev, item] : [item]);
+                }
+              }}
               icon={require('@/assets/images/convert.png')} />
             </View>
           <View style={styles.columnContainer}>
@@ -103,13 +109,13 @@ export default function Index() {
         >
           <FlatList
             key={numColumns}
-            data={conversionData?.matches ?? []}
+            data={conversionData}
             keyExtractor={(_, index) => index.toString()}
             renderItem={({ item, index }) => 
             <Match
-              original={conversionData!.original}
-              bestMatch={item}
-              matches={conversionData?.matches ?? []}
+              original={item.original}
+              bestMatch={item.bestMatch}
+              matches={item.matches ?? []}
               numColumns={numColumns}
               style={{zIndex: (-1 - index)}}
             />}

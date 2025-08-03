@@ -56,7 +56,7 @@ router.post('/', async (req: Request, res: Response) => {
     if (clientDisconnected) break;
     item = await getMetadata(item, originClass);
     const result = await destinationClass.convert(item);
-    res.write(`${JSON.stringify(result)}`);
+    res.write(`${JSON.stringify(result)}\n`);
   }
 })
 
