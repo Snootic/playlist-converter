@@ -13,7 +13,7 @@ export function getConfig(platform: string) {
   return undefined;
 }
 
-export function getMetadata(playlistItem: detectSourceProps['source'], sourceClass: any) {
+export async function getMetadata(playlistItem: detectSourceProps['source'], sourceClass: any) {
   let metadata;
   const source = detectSource(playlistItem)
 
@@ -23,7 +23,7 @@ export function getMetadata(playlistItem: detectSourceProps['source'], sourceCla
   }
   if (source == "YouTube") {
     const video = playlistItem as YouTubeVideo
-    metadata = sourceClass.getVideoMetadata(video)
+    metadata = await sourceClass.getVideoMetadata(video)
   }
 
   return metadata
