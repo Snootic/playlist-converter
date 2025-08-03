@@ -1,7 +1,7 @@
 import { ConversionResult, SpotifyTrack, YouTubeVideo } from "@types";
 import Button from "@/components/button";
 import { Colors } from "@/constants/Colors";
-import mapSource from "@/common/detectSource";
+import {mapSource} from "@/common/detectSource";
 import { useDynamicFlexContainer } from "@/hooks/Dimensions";
 import React, { useEffect, useRef } from "react";
 import {
@@ -31,7 +31,7 @@ export default function BestMatch({ original, bestMatch, matches, numColumns, st
 
   const dynamicFlexContainer = useDynamicFlexContainer()
 
-  const source = mapSource({ source: original });
+  const source = mapSource(original);
 
   const slideDownAnim = useRef(new Animated.Value(-50)).current;
   const fadeInAnim = useRef(new Animated.Value(0)).current;
@@ -66,7 +66,7 @@ export default function BestMatch({ original, bestMatch, matches, numColumns, st
           <View style={styles.bestMatchInfo}>
             <TouchableOpacity onPress={() => bestMatch?.url && Linking.openURL(bestMatch.url)}>
               <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-                {bestMatch?.title || "Unknown Title"}
+                {bestMatch?.title || "No match Found"}
               </Text>
             </TouchableOpacity>
 
@@ -105,7 +105,7 @@ export default function BestMatch({ original, bestMatch, matches, numColumns, st
       {showOtherMatches && (
         <ScrollView style={styles.otherMatchesContainer} nestedScrollEnabled={true}>
           {matches
-            .filter(m => m !== bestMatch)
+            .filter(m => m.url !== bestMatch?.url)
             .map((item, index) => (
               <OtherMatch key={index} {...item} style={{ zIndex: -1 - index }} />
             ))}
@@ -126,6 +126,7 @@ function getStyles(colorScheme: ColorSchemeName) {
       elevation: 20,
       ...(Platform.OS === 'web' ? { boxShadow: '4px 8px 20px rgba(0, 0, 0, 0.32)' } : {}),
       maxHeight: 200,
+      overflow: 'hidden'
     },
     row: {
       flexDirection: 'row',
@@ -184,7 +185,8 @@ function getStyles(colorScheme: ColorSchemeName) {
     url: {
       fontSize: 14,
       color: Colors[colorScheme ?? 'dark'].textSuccess,
-      textDecorationLine: 'underline'
+      textDecorationLine: 'underline',
+      maxWidth: '80%'
     },
     otherMatchesContainer: {
       maxHeight: 250,
