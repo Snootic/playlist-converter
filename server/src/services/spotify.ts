@@ -98,7 +98,7 @@ export class SpotifyService {
     return tracks;
   }
 
-  async *convertToSpotify(playlist: Playlist<any>, source_access_token: string): AsyncGenerator<{ConversionResult: any}>{
+  async *convertToSpotify(playlist: Playlist<any>): AsyncGenerator<{ConversionResult: any}>{
     for (const item of playlist) {
       const tracks = await this.searchTrack(item.title);
       const matches = await this.checkMatches(tracks, item);
