@@ -38,8 +38,6 @@ export class Auth implements AuthConfig {
       state: btoa(state)
     });
 
-    console.log(params)
-
     return {url: `${this.authorizationEndpoint}?${params.toString()}`};
   }
 
