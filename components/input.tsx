@@ -8,14 +8,27 @@ import {
   Platform
 } from "react-native";
 
-interface inputProps extends TextInputProps {}
+interface inputProps extends TextInputProps {
+  status: 'success' | 'warning' | 'error' | 'none'
+}
 
 export default function Input({...props}: inputProps) {
   const colorScheme = useColorScheme()
   const styles = getStyles(colorScheme)
 
+  let borderColor = {}
+  let status = props.status
+  if (status !== "none") {
+    borderColor = {
+      borderColor: Colors[colorScheme ?? "dark"][status],
+      borderWidth: 2,
+      // Remove default focus outline/border for web
+      ...(Platform.OS === 'web' ? { outline: 'none', boxShadow: 'none' } : {}),
+    };
+  }
+
   return (
-    <TextInput style={styles.input} {...props} placeholderTextColor={Colors[colorScheme ?? "dark"].textMuted}></TextInput>
+    <TextInput {...props} style={[styles.input, borderColor]}  placeholderTextColor={Colors[colorScheme ?? "dark"].textMuted}></TextInput>
   )
 }
 
@@ -23,8 +36,7 @@ function getStyles(colorScheme: ColorSchemeName) {
   return StyleSheet.create({
     input: {
       backgroundColor: Colors[colorScheme ?? "dark"].containerBackground,
-      maxWidth: '80%',
-      minWidth: '60%',
+      width: '100%',
       color: Colors[colorScheme ?? "dark"].textMuted,
       borderRadius: 4,
       padding: 15,
