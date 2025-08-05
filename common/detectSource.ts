@@ -69,4 +69,16 @@ export function mapMatch(match: detectSourceProps['source'], score: ScoreDetails
     };
   }
   return undefined;
-} 
+}
+
+export function parseUrl(playlistUrl: string) {
+  if (playlistUrl.includes("youtube")){
+    return sources.youtube
+  }
+
+  if (playlistUrl.includes("spotify")) {
+    return sources.spotify
+  }
+
+  return undefined
+}

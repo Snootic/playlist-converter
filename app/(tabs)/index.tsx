@@ -1,5 +1,6 @@
 import Match from "@/components/bestMatch";
 import Button from "@/components/button";
+import Select from "@/components/select";
 import Header from "@/components/header";
 import Input from "@/components/input";
 import { Colors } from "@/constants/Colors";
@@ -17,26 +18,46 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions
+  useWindowDimensions,
+  Image,
 } from "react-native";
+import { parseUrl, sources } from "@/common/detectSource";
 
 export default function Index() {
   const colorScheme = useColorScheme();
   const styles = getStyles(colorScheme);
   const dynamicFlexContainer = useDynamicFlexContainer();
+  const imageSourceMap: Record<string, any> = {
+    Spotify: require('@/assets/images/spotify-black-logo.png'),
+    YouTube: require('@/assets/images/youtube-logo-white.png'),
+  };
 
   const slideUpAnim = useRef(new Animated.Value(0)).current;
   const fadeInAnim = useRef(new Animated.Value(1)).current;
   const flatListSlideAnim = useRef(new Animated.Value(350)).current;
 
+ 
   const { width } = useWindowDimensions();
   const numColumns = width > 600 ? 2 : 1;
 
+  let [status, setStatus] = useState<string>('')
+  let [inputStatus, setInputStatus] = useState<'none' | 'success' | 'warning' | 'error'>('none')
+
   let [inputValue, setInputValue] = useState<string>('')
+  let [source, setSource] = useState<string>('')
+
+
   const [conversionData, setConversionData] = useState<ConversionResult<SpotifyTrack | YouTubeVideo>[] | null>(null);
   const [animatedRows, setAnimatedRows] = useState<Record<string, boolean>>({});
 
   let result: Response | undefined = undefined;
+
+  let [selectedDestination, setSeletecDestination] = useState<string>("")
+  const destinationOptions = Object.entries(sources).map(([key, label]) => ({
+    label,
+    value: key
+  }));
+
 
   useEffect(() => {
     if (conversionData) {
@@ -86,24 +107,59 @@ export default function Index() {
     <SafeAreaView style={styles.page}>
         <Header />
         <Animated.View style={[styles.content, styles.animatedContainer,{transform: [{ translateY: slideUpAnim }]}]}>
-            <View style={[styles.inputContainer]}>
-              <Input placeholder="Paste the playlist link here" value={inputValue} onChangeText={(text) => setInputValue(text)}/>
-              <Button
-              variant="primary"
-              title="Convert Playlist"
-              height={47}
-              event={async () => {
-                for await (const item of convert(inputValue)) {
-                  setConversionData(prev => prev ? [...prev, item] : [item]);
-                }
+            <View style={[styles.inputContainer, dynamicFlexContainer]}>
+              {source && (
+                <Image
+                  source={imageSourceMap[source]}
+                  style={{width: 40, height: 40}}
+                  resizeMode="contain"
+                />
+              )}
+              <Input
+              placeholder="Paste the playlist link here"
+              value={inputValue}
+              onChangeText={(text) => { 
+                setInputValue(text); 
+                const detectedSource = parseUrl(text)!;
+                setSource(detectedSource); 
+                if (text.trim() === "") {
+                setInputStatus("none");
+                } else if (detectedSource) {
+                setInputStatus("success");
+                } else {
+                setInputStatus("warning");
+                };
+                console.log(detectedSource)
               }}
-              icon={require('@/assets/images/convert.png')} />
+              status={inputStatus}
+              />
+              <View style={{flexDirection: 'row', gap: 10}}>
+                <Select
+                  options={destinationOptions}
+                  value={selectedDestination}
+                  placeholder="Choose a destination"
+                  onSelect={setSeletecDestination}
+                />
+                <Button
+                  variant="primary"
+                  title="Convert Playlist"
+                  height={47}
+                  event={async () => {
+                    for await (const item of convert(inputValue, selectedDestination)) {
+                      setConversionData(prev => prev ? [...prev, item] : [item]);
+                    }
+                    setStatus('Finished conversion!')
+                  }}
+                  callback={() => setStatus('Converting...')}
+                  icon={require('@/assets/images/convert.png')}
+                />
+              </View>
             </View>
           <View style={styles.columnContainer}>
             <Text style={styles.hintText} selectable={false}>
-              Paste a Spotify or YouTube playlist link above to convert it.
+              Paste a playlist link above to convert it.
             </Text>
-            <Text style={styles.hintText} selectable={false}>Converting...</Text>
+            <Text style={styles.hintText} selectable={false}>{status}</Text>
           </View>
         </Animated.View>
         <Animated.View 
@@ -161,7 +217,6 @@ function getStyles(colorScheme: ColorSchemeName) {
       gap: 10
     },
     inputContainer: {
-      flexDirection: 'row',
       gap: 10,
       width: '100%',
       justifyContent: 'center',
