@@ -19,7 +19,7 @@ export async function getMetadata(playlistItem: detectSourceProps['source'], sou
 
   if (source == "Spotify") {
     const track = playlistItem as SpotifyTrack
-    // needs to implement
+    return track // there's no need to parse the track
   }
   if (source == "YouTube") {
     const video = playlistItem as YouTubeVideo
