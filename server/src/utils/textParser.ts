@@ -1,3 +1,5 @@
+import { detectSource } from "@common/detectSource";
+
 export function normalizeText(text: string): string {
     return text.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
 }
@@ -47,6 +49,15 @@ export function parseVideoTitle(videoTitle: string): string {
     return `${artist} ${song}`;
 }
 
-export function parseTitle(title: string): string {
-  return parseVideoTitle(title) // for now only parsing youtube video titles
+export function parseTitle(title: string, source: any): string {
+  let sourceName = detectSource(source)
+  switch (sourceName) {
+    case "YouTube":
+      return parseVideoTitle(title)
+    case "Spotify":
+      return `${source.album.artists[0].name} - ${title}`
+    default:
+      return ""
+  }
+
 }

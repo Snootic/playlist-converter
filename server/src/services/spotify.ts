@@ -88,8 +88,8 @@ export class SpotifyService {
     return tracks;
   }
 
-  private async searchTrack(title: string): Promise<SpotifyTrack[]>  {    
-    const query = parseTitle(title);
+  private async searchTrack(title: string, source: any): Promise<SpotifyTrack[]>  {    
+    const query = parseTitle(title, source);
 
     const search = await this.API.search(query, ['track'], undefined, 20);
 
@@ -99,7 +99,7 @@ export class SpotifyService {
   }
 
   async convert(playlistItem: any): ConversionResult<any> {
-    const tracks = await this.searchTrack(playlistItem.title)
+    const tracks = await this.searchTrack(playlistItem.title, playlistItem)
     const matches = await this.checkMatches(tracks, playlistItem)
 
     let bestMatch = null;
