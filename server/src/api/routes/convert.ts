@@ -8,7 +8,7 @@ const router = Router();
 
 router.post('/', async (req: Request, res: Response) => {
   const origin = req.body.origin
-  const originToken = req.body.origin_token
+  let originToken = req.body.origin_token
   const destination = req.body.destination
   let destinationTokenData = req.body.destination_token_data
   const playlistURl = req.body.playlist_url
@@ -24,11 +24,24 @@ router.post('/', async (req: Request, res: Response) => {
   let destinationClass;
 
   destinationTokenData =  JSON.parse(destinationTokenData);
+  originToken = JSON.parse(originToken)
 
   switch (origin) {
     case 'YouTube':
-      originClass = new YoutubeService(originToken);
+      originClass = new YoutubeService(originToken.access_token);
       playlistItems = await originClass.getPlaylistTracks(playlistURl);
+    case 'Spotify':
+    
+      const spotifyToken: AccessToken = {
+        access_token: originToken.access_token,
+        token_type: originToken.token_type,
+        expires_in: originToken.expires_in,
+        expires: originToken.expires,
+        refresh_token: originToken.refresh_token
+      };
+      
+      originClass = new SpotifyService(spotifyToken)
+      playlistItems = await originClass.getPlaylistTracks(playlistURl)
   }
   
   if (!playlistItems) {
@@ -46,8 +59,11 @@ router.post('/', async (req: Request, res: Response) => {
       };
       
       destinationClass = new SpotifyService(spotifyToken)
+    
+    case 'YouTube':
+      destinationClass = new YoutubeService(destinationTokenData.access_token)
   }
-
+  
   if (!destinationClass) {
     throw new Error("Destination service not initialized");
   }

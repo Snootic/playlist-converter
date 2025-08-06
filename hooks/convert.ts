@@ -2,17 +2,14 @@ import API_URL from "@/constants/api";
 import { getTokenData } from "./auth";
 import { ConversionResult } from "@/common/types";
 
-export async function* convert(playlistUrl: string, destination?: string) {
+export async function* convert(playlistUrl: string, destination: string) {
   let origin;
   let originToken;
-  destination = '' // while there's only two options, the destination can be decided this way
-  // after adding more platforms, passing the destination will be obligatory
+
   if (playlistUrl.includes('youtube')) {
     origin = 'YouTube'
-    destination = 'Spotify'
   } else if (playlistUrl.includes('spotify')) {
     origin = 'Spotify'
-    destination = 'YouTube'
   }
 
   if (!origin) {
@@ -20,7 +17,7 @@ export async function* convert(playlistUrl: string, destination?: string) {
   }
 
   const tokenData = await getTokenData(origin)
-  originToken = tokenData.access_token
+  originToken = JSON.stringify(tokenData)
 
   let destinationTokenData = await getTokenData(destination);
   destinationTokenData = JSON.stringify(destinationTokenData);
