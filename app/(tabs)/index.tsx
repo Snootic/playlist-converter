@@ -55,9 +55,8 @@ export default function Index() {
   let [selectedDestination, setSeletecDestination] = useState<string>("")
   const destinationOptions = Object.entries(sources).map(([key, label]) => ({
     label,
-    value: key
+    value: label
   }));
-
 
   useEffect(() => {
     if (conversionData) {
