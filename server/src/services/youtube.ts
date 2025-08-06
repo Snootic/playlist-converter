@@ -1,7 +1,9 @@
 import score from '@/utils/score';
 import { parseISO8601Duration, parseTitle } from '@/utils/textParser';
+import { mapMatch } from '@common/detectSource';
+import { ScoreDetails } from '@common/types/score';
 import { Track } from '@spotify/web-api-ts-sdk';
-import { ConversionResult, Playlist, TrackMatch, VideoMetadata, YouTubeVideo } from '@types';
+import { ConversionResult, Match, VideoMetadata, YouTubeVideo } from '@types';
 import { google, youtube_v3 } from 'googleapis';
 import yts from 'yt-search';
 
@@ -85,7 +87,6 @@ export class YoutubeService {
     let success = false;
     
     while (attempts < 5 && !success) {
-      console.log(`attempt ${attempts} for ${video.videoId}`);
       try {
         const result = await yts({ videoId: video.videoId });
         videoMetadata = result as VideoMetadata;
@@ -104,10 +105,11 @@ export class YoutubeService {
     return videoMetadata;
   }
   
-  async checkMatches(videos: YouTubeVideo[], original: any): Promise<Array<[VideoMetadata, TrackMatch<VideoMetadata>]>> {
-    const matches = new Map<VideoMetadata, TrackMatch<VideoMetadata>>();
+  async checkMatches(videos: YouTubeVideo[], original: any): Promise<Match[]> {
+    let matches = new Array<Match>();
+    const preMatches = new Map<VideoMetadata, ScoreDetails>();
   
-    await Promise.all(videos.map(async (video, index) => {    
+    await Promise.all(videos.map(async (video) => {    
       const videoMetadata = await this.getVideoMetadata(video);
   
       const scoreDetails = score(original, videoMetadata);
@@ -115,39 +117,34 @@ export class YoutubeService {
       if (scoreDetails === null) {
         return;
       }
-  
-      const totalScore = Object.values(scoreDetails).reduce((sum, value) => (sum as number) + (value as number), 0);
-  
-      matches.set(videoMetadata, { totalScore, scoreDetails });
+      
+      preMatches.set(videoMetadata, scoreDetails)
     }));
-  
-    const allViews = new Map<VideoMetadata, number>();
-    matches.forEach((value, key) => {
-      allViews.set(key, key.views);
-    });
-  
-    const sortedViews = [...allViews.entries()].sort((a, b) => b[1] - a[1]);
-    if (sortedViews.length > 0) {
-      const topVideo = sortedViews[0][0];
-      const topMatch = matches.get(topVideo);
+
+    if (preMatches.size > 0) {
+      const sortedByViews = [...preMatches].sort(
+        ([videoMetadataA], [videoMetadataB]) => videoMetadataB.views - videoMetadataA.views
+      );
+      const topMatch = sortedByViews[0];
       if (topMatch) {
-        topMatch.scoreDetails.bonus += 2;
-        topMatch.totalScore += 2;
+        const [videoMetadata, scoreDetails] = topMatch;
+        scoreDetails.bonus += 2;
       }
     }
-  
-    const sortedMatches = [...matches.entries()].sort((a, b) => {
-      if (b[1].totalScore === a[1].totalScore) {
-        return b[0].views - a[0].views;
-      }
-      return b[1].totalScore - a[1].totalScore;
+    matches = Array.from(preMatches.entries()).map(([videoMetadata, scoreDetails]) => mapMatch(videoMetadata, scoreDetails));
+
+    const sortedMatches = [...matches].sort((a, b) => {
+      // if (b.totalScore === a.totalScore) {
+      //   return b.videoMetadata.views - a.videoMetadata.views;
+      // }
+      return b.totalScore - a.totalScore;
     });
-  
+
     return sortedMatches;
   }
   
-  async searchTrack(title: string): Promise<YouTubeVideo[]> {
-    const query = parseTitle(title);
+  async searchTrack(title: string, source: any): Promise<YouTubeVideo[]> {
+    const query = parseTitle(title, source);
 
     let result: any = null;
   
@@ -174,12 +171,12 @@ export class YoutubeService {
   }
   
   async convert(playlistItem: any): ConversionResult<any> {
-    const videos = await this.searchTrack(playlistItem.title)
+    const videos = await this.searchTrack(playlistItem.title || playlistItem.album.name, playlistItem)
     const matches = await this.checkMatches(videos, playlistItem)
 
     let bestMatch = null;
     if ( matches.length > 0 ) {
-      bestMatch = matches[0][0]
+      bestMatch = matches[0]
     }
 
     return {playlistItem, bestMatch, matches}
