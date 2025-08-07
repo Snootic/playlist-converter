@@ -33,8 +33,20 @@ export default function Button({ variant, title, icon, iconColor, height = 40, .
       <Pressable
         {...props}
         style={[styles.button, styles[variant], {height: height}]}
-        onPress={() => { props.event(); props.callback?.(); }}
-      >
+        onPress={async () => {
+          if (props.event.constructor.name === "AsyncFunction") {
+            await props.event();
+          } else {
+            props.event();
+          }
+          if (props.callback) {
+            if (props.callback.constructor.name === "AsyncFunction") {
+              await props.callback();
+            } else {
+              props.callback();
+            }
+          }
+        }}>
         {icon && (
           <Image
             style={[
