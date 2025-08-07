@@ -2,7 +2,7 @@ import { mapSource } from "@/common/detectSource";
 import Button from "@/components/button";
 import { Colors } from "@/constants/Colors";
 import { useDynamicFlexContainer } from "@/hooks/Dimensions";
-import { ConversionResult, SpotifyTrack, YouTubeVideo } from "@types";
+import { ConversionResult, Match, SpotifyTrack, YouTubeVideo } from "@types";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
@@ -29,10 +29,12 @@ type MatchProps = ConversionResult<SpotifyTrack | YouTubeVideo> & {
   onAnimationDone?: () => void
 };
 
-export default function BestMatch({ original, bestMatch, matches, numColumns, style, index=0, shouldAnimate = true, onAnimationDone }: MatchProps) {
+export default function BestMatch({ original, bestMatch: initialBestMatch, matches, numColumns, style, index=0, shouldAnimate = true, onAnimationDone }: MatchProps) {
   const colorScheme = useColorScheme()
   const styles = getStyles(colorScheme)
 
+  const [bestMatch, setBestMatch] = React.useState(initialBestMatch);
+  
   const [showOtherMatches, setShowOtherMatches] = React.useState(false);
 
   const dynamicFlexContainer = useDynamicFlexContainer()
@@ -41,6 +43,11 @@ export default function BestMatch({ original, bestMatch, matches, numColumns, st
 
   const slideDownAnim = useRef(new Animated.Value(-50)).current;
   const fadeInAnim = useRef(new Animated.Value(0)).current;
+
+  const swapMatch = (selectedMatch: Match) => {
+    setBestMatch(selectedMatch);
+    setShowOtherMatches(false);
+  };
 
   useEffect(() => {
     if (shouldAnimate) {
@@ -109,7 +116,7 @@ export default function BestMatch({ original, bestMatch, matches, numColumns, st
                 icon={require('@/assets/images/match.png')}
                 iconColor={Colors[colorScheme ?? 'dark'].textContrast}
                 title="Other Matches"
-                event={() => { setShowOtherMatches((prev) => !prev); console.log(showOtherMatches); }}
+                event={() => { setShowOtherMatches((prev) => !prev) }}
               />
             </View>
           )}
@@ -120,7 +127,12 @@ export default function BestMatch({ original, bestMatch, matches, numColumns, st
           {matches
             .filter(m => m.url !== bestMatch?.url)
             .map((item, index) => (
-              <OtherMatch key={index} {...item} style={{ zIndex: -1 - index }} />
+              <OtherMatch 
+                key={index}
+                match={item}
+                onUseThis={swapMatch}
+                style={{ zIndex: -1 - index }}
+              />
             ))}
         </ScrollView>
       )}

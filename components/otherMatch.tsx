@@ -15,9 +15,12 @@ import {
   ViewProps
 } from "react-native";
 
-type MatchProps = Match & ViewProps & {}
+type MatchProps = ViewProps & {
+  match: Match,
+  onUseThis: (match: Match) => void
+}
 
-export default function OtherMatch({ thumbnailUrl, title, url, totalScore, scoreDetails, style }: MatchProps) {
+export default function OtherMatch({ match, onUseThis, style }: MatchProps) {
   const colorScheme = useColorScheme()
   const styles = getStyles(colorScheme)
 
@@ -27,20 +30,20 @@ export default function OtherMatch({ thumbnailUrl, title, url, totalScore, score
         <TouchableOpacity style={styles.matchThumbnail}>
           <Image
             style={styles.thumbnailImage}
-            source={{ uri: thumbnailUrl ?? "" }}
+            source={{ uri: match.thumbnailUrl ?? "" }}
             resizeMode="cover"
           />
         </TouchableOpacity>
         <View style={styles.matchInfo}>
-          <TouchableOpacity onPress={() => url && Linking.openURL(url)}>
+          <TouchableOpacity onPress={() => match.url && Linking.openURL(match.url)}>
             <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-              {title || "Unknown Title"}
+              {match.title || "Unknown Title"}
             </Text>
           </TouchableOpacity>
 
-          {scoreDetails && (
+          {match.scoreDetails && (
             <Text style={[styles.infoText, styles.textSubtle]}>
-              Score: {totalScore}
+              Score: {match.totalScore}
             </Text>
           )}
           <View style={styles.buttonsContainer}>
@@ -49,7 +52,7 @@ export default function OtherMatch({ thumbnailUrl, title, url, totalScore, score
               icon={require('@/assets/images/usematch.png')}
               iconColor={Colors[colorScheme ?? 'dark'].text}
               title="Use This"
-              event={() => null }
+              event={() => onUseThis && onUseThis(match) }
             />
           </View>
         </View>
