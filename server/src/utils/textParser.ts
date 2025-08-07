@@ -55,7 +55,7 @@ export function parseTitle(title: string, source: any): string {
     case "YouTube":
       return parseVideoTitle(title)
     case "Spotify":
-      return `${source.album.artists[0].name} - ${title}`
+      return `${title} - ${source.album.name} - ${source.album.artists[0].name}`
     default:
       return ""
   }
