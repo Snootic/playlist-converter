@@ -44,7 +44,7 @@ export default function score(spotifyTrack: SpotifyTrack, videoMetadata: VideoMe
   const videoTitle = normalizeText(videoMetadata.title);
   const videoDescription = normalizeText(videoMetadata.description);
 
-  if (Math.abs(videoMetadata.seconds - Math.round(spotifyTrack.duration_ms) / 1000) >= 30) {
+  if (Math.abs(videoMetadata.seconds - Math.round(spotifyTrack.duration_ms / 1000)) >= 30) {
     return null;
   }
 
