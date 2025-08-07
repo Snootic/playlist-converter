@@ -113,7 +113,34 @@ export async function getTokenData(platform: string) {
 }
 
 export async function logout(platform: string): Promise<void> {
+  let access_token = await AsyncStorage.getItem(`${platform}TokenData`);
+  access_token = JSON.parse(access_token!).access_token
+
+  let revokeUrl: string | undefined;
+  
+  switch(platform){
+    case("YouTube"):
+      revokeUrl = "https://oauth2.googleapis.com/revoke"
+    case("Spotify"):
+      revokeUrl = undefined // did not find any spotify doc on revoking access_token
+    default:
+      revokeUrl = undefined
+  }
+  
+  if (revokeUrl) {
+    const response = await fetch(`${revokeUrl}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: `token=${encodeURIComponent(access_token!)}`,
+    });
+
+    console.log(response.json())
+  }
+
   await AsyncStorage.multiRemove([
     `${platform}TokenData`,
   ]);
+  
 }
