@@ -3,13 +3,22 @@ import { Colors } from "@/constants/Colors";
 import { useEffect, useState } from "react";
 import { ColorSchemeName, Image, Platform, Pressable, StyleSheet, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { login } from "@/hooks/auth";
+import { login, isAuthenticated, logout } from "@/hooks/auth";
 
 export default function Header() {
   const colorScheme = useColorScheme()
   const styles = getStyles(colorScheme)
   const [isSpotifyAuthenticated, setIsSpotifyAuthenticated] = useState(false);
   const [isYouTubeAuthenticated, setIsYouTubeAuthenticated] = useState(false);
+
+  const check = async () => {
+    setIsSpotifyAuthenticated(await isAuthenticated('Spotify'))
+    setIsYouTubeAuthenticated(await isAuthenticated('YouTube'))
+  }
+
+  useEffect(() => {
+    check()
+  }, [])
 
   return (
     <SafeAreaView style={[styles.safeArea, styles.header]}>
@@ -26,14 +35,16 @@ export default function Header() {
             variant="spotify" 
             title={'Logout'} 
             icon={require('@/assets/images/spotify-black-logo.png')} 
-            event={() => null}
+            event={() => logout('Spotify')}
+            callback={check}
           />
         ) : (
           <Button 
             variant="spotify" 
             title={'Login'} 
             icon={require('@/assets/images/spotify-black-logo.png')}
-            event={() => login('Spotify')}
+            event={async () => await login('Spotify')}
+            callback={check}
           />
         )}
         {isYouTubeAuthenticated ? (
@@ -41,14 +52,16 @@ export default function Header() {
             variant="youtube"
             title={'Logout'}
             icon={require('@/assets/images/youtube-logo-white.png')}
-            event={() => null}
+            event={() => logout('YouTube')}
+            callback={check}
           />
         ): (
           <Button
             variant="youtube"
             title={'Login'}
             icon={require('@/assets/images/youtube-logo-white.png')}
-            event={() => login('YouTube')}
+            event={async () => await login('YouTube')}
+            callback={check}
           />
         )}
       </View>
