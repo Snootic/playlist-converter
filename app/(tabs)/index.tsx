@@ -134,7 +134,7 @@ export default function Index() {
               />
               <View style={{flexDirection: 'row', gap: 10}}>
                 <Select
-                  options={destinationOptions}
+                  options={destinationOptions.filter(o => o.label !== source)}
                   value={selectedDestination}
                   placeholder="Choose a destination"
                   onSelect={setSeletecDestination}
