@@ -81,18 +81,17 @@ export class YoutubeService {
     return youtubePlaylist;
   }
   
-  async getVideoMetadata(video: YouTubeVideo): Promise<VideoMetadata> {
-    let videoMetadata: VideoMetadata | null = null;
+  async getVideoMetadata(video: YouTubeVideo): Promise<YouTubeVideo> {
+    let videoMetadata: YouTubeVideo | null = null;
     let attempts = 0;
     let success = false;
     
     while (attempts < 5 && !success) {
       try {
         const result = await yts({ videoId: video.videoId });
-        videoMetadata = result as VideoMetadata;
+        videoMetadata = result as YouTubeVideo;
         success = true;
       } catch (error) {
-        console.log(error);
         attempts++;
         await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
       }
@@ -113,7 +112,6 @@ export class YoutubeService {
       const videoMetadata = await this.getVideoMetadata(video);
   
       const scoreDetails = score(original, videoMetadata);
-  
       if (scoreDetails === null) {
         return;
       }
@@ -146,7 +144,15 @@ export class YoutubeService {
   async searchTrack(title: string, source: any): Promise<YouTubeVideo[]> {
     const query = parseTitle(title, source);
 
-    let result: any = null;
+    let result: yts.SearchResult = {
+      all: [],
+      videos: [],
+      live: [],
+      playlists: [],
+      accounts: [],
+      channels: [],
+      lists: []
+    }
   
     let attempts = 0;
     let success = false;
@@ -161,17 +167,13 @@ export class YoutubeService {
       }
     }
   
-    if (!result) {
-      throw new Error(`Failed to search for ${query} after ${attempts} attempts`);
-    }
-  
     const videos = result.videos.slice(0, 10);
   
     return videos;
   }
   
   async convert(playlistItem: any): ConversionResult<any> {
-    const videos = await this.searchTrack(playlistItem.title || playlistItem.album.name, playlistItem)
+    const videos = await this.searchTrack(playlistItem.title || playlistItem.name, playlistItem)
     const matches = await this.checkMatches(videos, playlistItem)
 
     let bestMatch = null;
