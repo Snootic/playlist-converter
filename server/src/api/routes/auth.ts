@@ -10,20 +10,23 @@ router.get('/', (req: Request, res: Response) => {
   const platform = typeof req.query.platform === 'string' ? req.query.platform : null;
 
   if (redirectUri === null) {
-    throw new Error("The redirect uri must be provided")
+    return res.status(400).json({ error: "The redirect Uri must be provided" });
   }
 
   if (platform === null) {
-    throw new Error("The platform must be specified")
+    return res.status(400).json({ error: "The platform must be specified" });
   }
 
   const config: AuthConfig = getConfig(platform)!; 
-
-  const auth = new Auth(platform, config.clientID, config.clientSecret, config.scope, config.authorizationEndpoint, config.tokenEndpoint)
-
-  let response = auth.getCodeUri(redirectUri)
-
-  return res.json(response)
+  
+  try{
+    const auth = new Auth(platform, config.clientID, config.clientSecret, config.scope, config.authorizationEndpoint, config.tokenEndpoint)
+  
+    let response = auth.getCodeUri(redirectUri)
+    return res.json(response)
+  } catch (e) {
+    return res.status(500).json({ error: e });
+  }
 });
 
 router.post('/', async (req: Request, res: Response) => {
@@ -33,24 +36,27 @@ router.post('/', async (req: Request, res: Response) => {
   const refresh_token = req.body.refresh_token || null;
 
   if (!redirectUri) {
-    throw new Error("The redirect_uri must be provided")
+    return res.status(400).json({ error: "The redirect Uri must be provided" });
   }
 
   if (!platform) {
-    throw new Error("The platform must be specified")
+    return res.status(400).json({ error: "The platform must be specified" });
   }
-
-  if (!code || refresh_token) {
-    throw new Error("Either 'code' or 'refresh_token' must be provided for authentication.");
+  
+  if (!code && !refresh_token) {
+    return res.status(400).json({ error: "Either 'code' or 'refresh_token' must be provided for authentication." });
   }
 
   const config: AuthConfig = getConfig(platform)!; 
 
-  const auth = new Auth(platform, config.clientID, config.clientSecret, config.scope, config.authorizationEndpoint, config.tokenEndpoint)
-  
-  let response = await auth.authenticate(redirectUri, code)
-
-  return res.json(response)
+  try{
+    const auth = new Auth(platform, config.clientID, config.clientSecret, config.scope, config.authorizationEndpoint, config.tokenEndpoint)
+    
+    let response = await auth.authenticate(redirectUri, code, refresh_token)
+    return res.json(response)
+  } catch (e) {
+   return res.status(500).json({ error: e }); 
+  }
 });
 
 export default router;

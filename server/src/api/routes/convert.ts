@@ -45,7 +45,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
   
   if (!playlistItems) {
-    throw new Error("Playlist empty or not found")
+    return res.status(400).json({ error: "Playlist Empty or not found" });
   }
 
   switch (destination) {
@@ -65,7 +65,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
   
   if (!destinationClass) {
-    throw new Error("Destination service not initialized");
+    return res.status(500).json({ error: "Destination service not intialized, reach out the dev for support." });
   }
 
   for (let item of playlistItems) {
