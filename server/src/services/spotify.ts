@@ -98,6 +98,26 @@ export class SpotifyService {
     return tracks;
   }
 
+  async getTrack(track: SpotifyPlaylistTrack | string): SpotifyPlaylistTrack{
+    if (typeof track === 'string' && track.includes('track')) {
+      const url = new URL(track, "https://open.spotify.com");
+      const id= url.searchParams.get("track");
+      if (!id) {
+        throw new Error("Invalid Spotify track URL");
+      }
+
+      track = {id} as SpotifyPlaylistTrack
+    }
+
+    console.log(track.id)
+
+    track = await this.API.tracks.get(track.id)
+
+    console.log(track)
+
+    return track
+  }
+
   async convert(playlistItem: any): ConversionResult<any> {
     const tracks = await this.searchTrack(playlistItem.title, playlistItem)
     const matches = await this.checkMatches(tracks, playlistItem)
@@ -108,20 +128,6 @@ export class SpotifyService {
     }
 
     return {playlistItem, bestMatch, matches}
-    
-    // for (const item of playlist) {
-      
-    //   const tracks = await this.searchTrack(item.title);
-    //   const matches = await this.checkMatches(tracks, item);
-
-    //   if (matches.length > 0) {
-    //     const bestMatch = matches[0][0];
-
-    //     yield { ConversionResult: { item, bestMatch, matches } };
-    //   } else {
-    //     yield { ConversionResult: { item, bestMatch: null, matches: [] } };
-    //   }
-    // }
   }
 
   async createPlaylist(tracksUriList: string[], createPlaylistRequest: CreatePlaylistRequest): Promise<SpotifyPlaylist> {

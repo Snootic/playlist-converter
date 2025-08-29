@@ -81,10 +81,19 @@ export class YoutubeService {
     return youtubePlaylist;
   }
   
-  async getVideoMetadata(video: YouTubeVideo): Promise<YouTubeVideo> {
+  async getVideoMetadata(video: YouTubeVideo | string): Promise<YouTubeVideo> {
     let videoMetadata: YouTubeVideo | null = null;
     let attempts = 0;
     let success = false;
+
+    if (typeof video === "string" && video.includes("watch?")) {
+      const url = new URL(video, "https://youtube.com");
+      const videoId = url.searchParams.get("v");
+      if (!videoId) {
+        throw new Error("Invalid YouTube video URL");
+      }
+      video = { videoId } as YouTubeVideo;
+    }
     
     while (attempts < 5 && !success) {
       try {
