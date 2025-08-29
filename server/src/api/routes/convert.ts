@@ -144,7 +144,14 @@ router.post('/song', async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Destination service not intialized, reach out the dev for support." });
   }
 
-  const result = await destinationClass.convert(song);
+  let result
+
+  try {
+    result = await destinationClass.convert(song);
+  } catch (e) {
+    console.log(e)
+    return res.status(500).json(e)
+  }
 
   return res.status(200).json(JSON.stringify(result))
 })
