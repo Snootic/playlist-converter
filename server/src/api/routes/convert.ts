@@ -30,6 +30,7 @@ router.post('/', async (req: Request, res: Response) => {
     case 'YouTube':
       originClass = new YoutubeService(originToken.access_token);
       playlistItems = await originClass.getPlaylistTracks(playlistURl);
+      break;
     case 'Spotify':
     
       const spotifyToken: AccessToken = {
@@ -42,6 +43,7 @@ router.post('/', async (req: Request, res: Response) => {
       
       originClass = new SpotifyService(spotifyToken)
       playlistItems = await originClass.getPlaylistTracks(playlistURl)
+      break;
   }
   
   if (!playlistItems) {
@@ -59,9 +61,10 @@ router.post('/', async (req: Request, res: Response) => {
       };
       
       destinationClass = new SpotifyService(spotifyToken)
-    
+      break;
     case 'YouTube':
       destinationClass = new YoutubeService(destinationTokenData.access_token)
+      break;
   }
   
   if (!destinationClass) {
