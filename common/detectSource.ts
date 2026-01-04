@@ -71,13 +71,26 @@ export function mapMatch(match: detectSourceProps['source'], score: ScoreDetails
   return undefined;
 }
 
-export function parseUrl(playlistUrl: string) {
-  if (playlistUrl.includes("youtube")){
-    return sources.youtube
-  }
+export function parseUrl(playlistUrl: string, type: 'video' | 'playlist') {
+  switch (type) {
+    case "video":
+      if (playlistUrl.includes("youtube") && playlistUrl.includes('watch?v=')){
+        return sources.youtube
+      }
 
-  if (playlistUrl.includes("spotify")) {
-    return sources.spotify
+      if (playlistUrl.includes("spotify") && playlistUrl.includes('track')) {
+        return sources.spotify
+      }
+    case "playlist":
+      if (playlistUrl.includes('playlist')) {
+        if (playlistUrl.includes("youtube")){
+          return sources.youtube
+        }
+  
+        if (playlistUrl.includes("spotify")) {
+          return sources.spotify
+        }
+      }
   }
 
   return undefined

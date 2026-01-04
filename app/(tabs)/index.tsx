@@ -119,7 +119,7 @@ export default function Index() {
               value={inputValue}
               onChangeText={(text) => { 
                 setInputValue(text); 
-                const detectedSource = parseUrl(text)!;
+                const detectedSource = parseUrl(text, 'playlist')!;
                 setSource(detectedSource); 
                 if (text.trim() === "") {
                 setInputStatus("none");
