@@ -15,7 +15,7 @@ import {
 } from "react-native";
 
 type ButtonProps = PressableProps & {
-  variant: 'primary' | 'secondary' | keyof typeof sources ;
+  variant: 'primary' | 'secondary' | keyof typeof sources | 'disabled' ;
   title: string;
   icon?: ImageSourcePropType;
   iconColor?: string;
@@ -46,6 +46,7 @@ export default function Button({ variant, title, icon, iconColor, height = 40, .
           } else {
             props.event();
           }
+          
         }}>
         {icon && (
           <Image
@@ -110,6 +111,12 @@ function getStyles(colorScheme: ColorSchemeName) {
       backgroundColor: Colors[colorScheme ?? 'dark'].secondaryButton,
       borderColor: Colors[colorScheme ?? 'dark'].accent,
       color: Colors[colorScheme ?? 'dark'].text,
+    },
+    disabled: {
+      backgroundColor: Colors[colorScheme ?? 'dark'].textMuted,
+      borderColor: Colors[colorScheme ?? 'dark'].tintLight,
+      color: Colors[colorScheme ?? 'dark'].textContrast,
+      opacity: 0.8
     }
   })
 }
