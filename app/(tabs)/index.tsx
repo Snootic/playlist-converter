@@ -128,7 +128,6 @@ export default function Index() {
                 } else {
                 setInputStatus("warning");
                 };
-                console.log(detectedSource)
               }}
               status={inputStatus}
               />
