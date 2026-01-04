@@ -14,16 +14,14 @@ export default function Callback() {
         setStatus(`Authentication failed: ${error}`);
         return;
       }
-      if (auth_state) {
-        state = auth_state
-      }
+      const actualState = auth_state || state;
 
       let platform
       try {
-        const decoded = JSON.parse(atob(state as string));
+        const decoded = JSON.parse(atob(actualState as string));
         platform = decoded.platform;
       } catch (e) {
-        setStatus('Failed to decode state parameter.');
+        setStatus(`Failed to decode state parameter, ${e}.`);
         return;
       }
 
@@ -39,7 +37,7 @@ export default function Callback() {
     };
 
     handleAuth();
-  }, [error, code]);
+  }, [error, code, auth_state, state]);
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
