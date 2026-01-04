@@ -44,4 +44,9 @@ test.ts
 
 .env
 
+# Cloudflare
+*.pem
+cert.pem
+key.pem
+
 android/*
