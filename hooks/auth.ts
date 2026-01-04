@@ -5,13 +5,20 @@ import * as WebBrowser from 'expo-web-browser';
 
 export async function login(platform: string) {
   const redirectUri = (makeRedirectUri({ scheme: "playlistconverter", path: "callback", }))
+  
+  let response;
 
-  const response = await fetch(`${API_URL}/authenticate?redirect_uri=${redirectUri}&platform=${platform}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    }
-  });
+  try{
+    response = await fetch(`${API_URL}/authenticate?redirect_uri=${redirectUri}&platform=${platform}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      }
+    });
+
+  } catch (e) {
+    return e
+  }
 
   if (!response.ok) {
     return response
@@ -31,8 +38,6 @@ export async function login(platform: string) {
 export async function refreshTokens(platform: string, code?: string, refresh_token?: string) {
   const redirectUri = (makeRedirectUri({ scheme: "playlistconverter", path: "callback", }))
 
-  console.log(redirectUri)
-
   const body = {
     platform: platform,
     code: code,
@@ -45,21 +50,25 @@ export async function refreshTokens(platform: string, code?: string, refresh_tok
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value as string)}`)
     .join('&');
 
-  const response = await fetch(`${API_URL}/authenticate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: urlEncodedBody,
-  });
+  let response
+  
+  try{
+    response = await fetch(`${API_URL}/authenticate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: urlEncodedBody,
+    });
+  } catch (e) {
+    return e
+  }
 
   if (!response.ok) {
     return false
   }
 
   return await response.json()
-
-  return true
 }
 
 export async function isTokenExpired(platform: string): Promise<boolean> {
@@ -112,7 +121,7 @@ export async function getTokenData(platform: string) {
   }
 }
 
-export async function logout(platform: string): Promise<void> {
+export async function logout(platform: string): Promise<unknown> {
   let access_token = await AsyncStorage.getItem(`${platform}TokenData`);
   access_token = JSON.parse(access_token!).access_token
 
@@ -128,15 +137,17 @@ export async function logout(platform: string): Promise<void> {
   }
   
   if (revokeUrl) {
-    const response = await fetch(`${revokeUrl}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: `token=${encodeURIComponent(access_token!)}`,
-    });
-
-    console.log(response.json())
+    try {
+      await fetch(`${revokeUrl}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `token=${encodeURIComponent(access_token!)}`,
+      });
+    } catch (e) {
+      return e
+    }
   }
 
   await AsyncStorage.multiRemove([

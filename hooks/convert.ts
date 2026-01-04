@@ -29,16 +29,20 @@ export async function* convert(playlistUrl: string, destination: string) {
     destination: destination,
     destination_token_data: destinationTokenData
   };
-
-  const response = await fetch(`${API_URL}/convert`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "Cache-Control": "no-cache",
-      "Connection": "keep-alive"
-    },
-    body: new URLSearchParams(body).toString()
-  });
+  let response;
+  try { 
+    response = await fetch(`${API_URL}/convert`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive"
+      },
+      body: new URLSearchParams(body).toString()
+    });
+  } catch (e) {
+    return e
+  }
 
   const reader = response.body?.getReader();
   let buffer = '';
@@ -63,7 +67,7 @@ export async function* convert(playlistUrl: string, destination: string) {
             
             yield result;
           } catch (e) {
-            // handle parse error
+            return e
           }
         }
       }
